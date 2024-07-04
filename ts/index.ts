@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 // import * as buffer from "buffer";
 // const { Buffer } = buffer;
 
@@ -7,7 +8,7 @@ import fs from "fs";
 //   return buffer;
 // }
 
-export async function fetchAndCompileWasmModule(url: URL) {
+export async function fetchAndCompileWasmModule(url: URL | string) {
   try {
     return await WebAssembly.compileStreaming(fetch(url));
   } catch {
@@ -41,7 +42,11 @@ export function createSplines(splines: [number, number][]): (x: number) => numbe
 type Perlin = (_x: number, _y: number, _z: number, denom: number) => number;
 
 export async function createPerlin(): Promise<Perlin> {
-  const wasmModule = await fetchAndCompileWasmModule(new URL("../build/release.wasm", import.meta.url));
+  const wasmModule = await fetchAndCompileWasmModule(
+    import.meta.url
+      ? new URL("../build/release.wasm", import.meta.url)
+      : path.resolve(__dirname, "../build/release.wasm"),
+  );
   const wasmInstance = await WebAssembly.instantiate(wasmModule, {
     env: {
       abort: (e: string) => {
